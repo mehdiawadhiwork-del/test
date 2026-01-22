@@ -1,9 +1,8 @@
 pipeline {
     agent any
-    tool name: 'docker', type: 'dockerTool'
     tools {
         maven 'Maven 3.9.0'
-
+        dockerTool 'docker'
     }
 
     environment {
