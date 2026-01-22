@@ -1,0 +1,72 @@
+services:
+  # Votre application bancaire
+  banking-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: banking-app
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    networks:
+      - banking-network
+#    depends_on:
+#      - postgres
+    restart: unless-stopped
+
+  # Base de données PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: banking-postgres
+    environment:
+      - POSTGRES_DB=banking_db
+      - POSTGRES_USER=banking_user
+      - POSTGRES_PASSWORD=banking_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - banking-network
+
+  # SonarQube pour l'analyse de code
+  sonarqube:
+    image: sonarqube:community
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    volumes:
+      - sonarqube-data:/opt/sonarqube/data
+      - sonarqube-extensions:/opt/sonarqube/extensions
+      - sonarqube-logs:/opt/sonarqube/logs
+    networks:
+      - banking-network
+
+  # Jenkins pour CI/CD
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    privileged: true
+    user: root
+    ports:
+      - "8082:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins-data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - banking-network
+
+networks:
+  banking-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  sonarqube-data:
+  sonarqube-extensions:
+  sonarqube-logs:
+  jenkins-data:
